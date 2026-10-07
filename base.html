@@ -1,0 +1,24 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}{{S.site_title}}{% endblock %}</title>
+<meta name="description" content="{% block desc %}{{S.site_description}}{% endblock %}">
+<meta property="og:title" content="{{ self.title() }}"><meta property="og:description" content="{{ self.desc() }}"><meta property="og:type" content="website">
+<meta property="og:image" content="{% block ogimg %}{{ img(S.og_image) if S.og_image else '' }}{% endblock %}">
+{% if S.favicon %}<link rel="icon" href="{{img(S.favicon)}}">{% endif %}
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="{{fonts_url}}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+<style>:root{--primary:{{S.color_primary}};--accent:{{S.color_accent}};--bg:{{S.color_bg}};--text:{{S.color_text}};--muted:{{S.color_muted}};--fs:{{S.base_size}}px;--radius:{{S.radius}}px;
+--fh:'{{S.font_heading}}',Georgia,serif;--fb:'{{S.font_body}}',system-ui,sans-serif;--shadow:{{ {'none':'none','soft':'0 10px 30px -12px #0002','strong':'0 18px 40px -10px #0005'}[S.shadow] }}}</style></head>
+<body class="btn-{{S.btn_style}}">
+<header class="hdr {{'sticky' if S.header_sticky=='1'}} hdr-{{S.header_style}}"><div class="wrap hdr-in">
+<button class="ico burger" data-menu aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+<a class="logo" href="/">{% if S.logo %}<img src="{{img(S.logo)}}" alt="{{S.store_name}}" height="34">{% else %}{{S.store_name}}{% endif %}</a>
+<nav class="nav" id="nav"><a href="/">Início</a><a href="/categorias">Categorias</a><a href="/produtos">Produtos</a><a href="/novidades">Novidades</a><a href="/sobre">Sobre</a></nav>
+<div class="hdr-act"><button class="ico" data-search aria-label="Pesquisar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+{% if is_admin %}<a class="ico" href="/admin/" aria-label="Administração"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></a>{% endif %}</div></div></header>
+<div class="search" id="search" hidden><div class="wrap"><form action="/busca"><input name="q" id="sq" placeholder="Buscar por nome, categoria, tag ou código" autocomplete="off"><button class="ico" type="button" data-search-close aria-label="Fechar">✕</button></form><div id="sres" class="sres"></div></div></div>
+<main>{% block main %}{% endblock %}</main>
+<footer class="ftr ftr-{{S.footer_style}}"><div class="wrap ftr-in"><div><div class="logo">{{S.store_name}}</div><p class="sm">{{S.tagline}}</p></div>
+<div><h4>Loja</h4><a href="/produtos">Produtos</a>{% for c in nav_cats %}<a href="/categoria/{{c.slug}}">{{c.name}}</a>{% endfor %}</div><div><h4>Marca</h4><a href="/sobre">Sobre</a><a href="/novidades">Novidades</a></div></div>
+<div class="wrap sm ftr-b">{{S.footer_text}}</div></footer>
+<div id="toasts" aria-live="polite"></div>
+<script>window.FLASH={{ get_flashed_messages(with_categories=true)|tojson }}</script><script src="{{ url_for('static', filename='js/site.js') }}" defer></script></body></html>
