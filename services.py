@@ -1,10 +1,16 @@
 """Regras de negócio e consultas reutilizáveis (loja pública)."""
-import os, io, secrets, re, math, urllib.request
+import os, secrets, re, math, io
 from datetime import datetime, timedelta
 from db import q, ex, slugify, unique_slug, DEFAULT_SETTINGS
 from PIL import Image, ImageOps
+from supabase import create_client, Client
+
+# Inicializa o cliente do Supabase utilizando variáveis de ambiente
+supabase_url = os.environ.get("SUPABASE_URL")
+supabase_key = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+
 _cache = {}
-SUPA_URL = os.environ.get('SUPABASE_URL', '').rstrip('/'); SUPA_KEY = os.environ.get('SUPABASE_SERVICE_KEY', ''); BUCKET = os.environ.get('SUPABASE_BUCKET', 'uploads')
 def get_settings():
     if 'v' not in _cache:
         _cache['v'] = {**DEFAULT_SETTINGS, **{r['key']: r['value'] for r in q('select * from settings')}}
@@ -13,10 +19,15 @@ def set_setting(k, v):
     ex('insert into settings values(?,?) on conflict(key) do update set value=excluded.value', (k, v)); _cache.clear()
 
 def money(v): return '' if v is None else 'R$ ' + f'{v:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+
 def img(p, w=None):
     if not p: return '/ph/ring1.svg'
     if p.startswith('ph:'): return f'/ph/{p[3:]}.svg'
-    return f'{SUPA_URL}/storage/v1/object/public/{BUCKET}/{p}' if SUPA_URL else f'/static/uploads/{p}'
+    # Se já for uma URL completa do Supabase ou externa, retorna ela mesma
+    if p.startswith('http://') or p.startswith('https://'): return p
+    # Compatibilidade com imagens antigas locais (se houver)
+    return f'/static/uploads/{p}'
+
 def ids(s): return [int(x) for x in (s or '').split(',') if x.strip().isdigit()]
 def extra_lines(t): return [tuple(x.split(':', 1)) for x in (t or '').splitlines() if ':' in x]
 def badge(p):
@@ -38,7 +49,7 @@ def set_tags(pid, csv):
 PSEL = ("select p.*, c.name cat_name, c.slug cat_slug, (select path from product_images where product_id=p.id order by position,id limit 1) image "
         "from products p left join categories c on c.id=p.category_id ")
 ORDERS = {'recent': 'p.created_at desc, p.id desc', 'price_asc': 'coalesce(p.sale_price,p.price) asc', 'price_desc': 'coalesce(p.sale_price,p.price) desc',
-          'name': 'lower(p.name)', 'featured': 'p.featured desc, p.position, p.id desc', 'default': 'p.position, p.id'}
+          'name': 'p.name collate nocase', 'featured': 'p.featured desc, p.position, p.id desc', 'default': 'p.position, p.id'}
 def list_products(where='p.active=1', args=(), order='default', limit=None):
     return q(PSEL + f'where {where} order by {ORDERS.get(order, ORDERS["default"])}' + (f' limit {int(limit)}' if limit else ''), args)
 def by_ids(idl, table='products'):
@@ -61,7 +72,7 @@ def _num(v):
     except (TypeError, ValueError): return ''
 def search(s, limit=60):
     l = f'%{s}%'
-    return q(PSEL + 'where p.active=1 and (p.name ilike ? or p.sku ilike ? or c.name ilike ? or exists(select 1 from product_tags pt join tags t on t.id=pt.tag_id where pt.product_id=p.id and t.name ilike ?)) order by p.featured desc, p.name limit ?', (l, l, l, l, limit))
+    return q(PSEL + 'where p.active=1 and (p.name like ? or p.sku like ? or c.name like ? or exists(select 1 from product_tags pt join tags t on t.id=pt.tag_id where pt.product_id=p.id and t.name like ?)) order by p.featured desc, p.name limit ?', (l, l, l, l, limit))
 def home_blocks():
     out = []
     for s in q('select * from home_sections where visible=1 order by position,id'):
@@ -77,23 +88,42 @@ def home_blocks():
     return out
 
 def save_image(f, maxw=1600):
-    """Valida (extensão + decodificação real), corrige rotação, redimensiona e converte para WebP com nome aleatório."""
+    """Valida, corrige rotação, redimensiona, converte para WebP e envia para o Supabase Storage."""
     if not f or not f.filename: return None
-    if f.filename.rsplit('.', 1)[-1].lower() not in {'jpg', 'jpeg', 'png', 'webp', 'gif'}: raise ValueError('Formato de imagem não permitido.')
-    from db import BASE
+    if f.filename.rsplit('.', 1)[-1].lower() not in {'jpg', 'jpeg', 'png', 'webp', 'gif'}: 
+        raise ValueError('Formato de imagem não permitido.')
+    
     try:
         Image.open(f.stream).verify(); f.stream.seek(0)
         im = ImageOps.exif_transpose(Image.open(f.stream)); im.thumbnail((maxw, maxw))
-    except Exception: raise ValueError('Arquivo de imagem inválido.')
+    except Exception: 
+        raise ValueError('Arquivo de imagem inválido.')
+    
     name = secrets.token_hex(8) + '.webp'
-    buf = io.BytesIO(); im.convert('RGBA' if im.mode in ('RGBA', 'LA', 'P') else 'RGB').save(buf, 'WEBP', quality=82); data = buf.getvalue()
-    if SUPA_URL and SUPA_KEY:  # Supabase Storage (o disco do Render é temporário)
-        req = urllib.request.Request(f'{SUPA_URL}/storage/v1/object/{BUCKET}/{name}', data=data, method='POST', headers={'Authorization': f'Bearer {SUPA_KEY}', 'apikey': SUPA_KEY, 'Content-Type': 'image/webp', 'cache-control': 'max-age=31536000'})
-        try: urllib.request.urlopen(req, timeout=30)
-        except Exception: raise ValueError('Falha ao enviar a imagem para o armazenamento.')
+    
+    # Salva temporariamente em memória (buffer) como WEBP
+    buffer = io.BytesIO()
+    im.convert('RGBA' if im.mode in ('RGBA', 'LA', 'P') else 'RGB').save(buffer, 'WEBP', quality=82)
+    buffer.seek(0)
+    
+    bucket_name = 'uploads' # Certifique-se de que este bucket existe e é público no Supabase
+    
+    if supabase:
+        # Envia para o Supabase Storage
+        supabase.storage.from_(bucket_name).upload(
+            path=name,
+            file=buffer.getvalue(),
+            file_options={"content-type": "image/webp"}
+        )
+        # Retorna a URL pública completa para salvar no banco
+        return supabase.storage.from_(bucket_name).get_public_url(name)
     else:
-        open(os.path.join(BASE, 'static', 'uploads', name), 'wb').write(data)
-    return name
+        # Fallback local caso o Supabase não esteja configurado no ambiente
+        from db import BASE
+        local_path = os.path.join(BASE, 'static', 'uploads', name)
+        with open(local_path, 'wb') as wf:
+            wf.write(buffer.getvalue())
+        return name
 
 def placeholder(name):
     """SVG de joia estilizado (placeholder elegante, sem dependência externa)."""
