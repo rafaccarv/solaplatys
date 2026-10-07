@@ -1,0 +1,8 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Silver Empire</title>
+<link rel="stylesheet" href="/static/css/admin.css"></head><body>
+{% if session.uid %}<aside class="side" id="side"><a class="brand" href="/admin/">SILVER EMPIRE<small>Admin</small></a><nav>
+{% for u,l in [('/admin/','Dashboard'),('/admin/products','Produtos'),('/admin/categories','Categorias'),('/admin/home_sections','Página inicial'),('/admin/banners','Banners'),('/admin/config/general','Configurações'),('/admin/config/appearance','Aparência'),('/admin/config/seo','SEO'),('/admin/users','Usuários')] %}<a href="{{u}}" class="{{'on' if request.path==u or (u!='/admin/' and request.path.startswith(u))}}">{{l}}</a>{% endfor %}
+<a href="/" target="_blank">Ver site ↗</a><form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="{{csrf()}}"><button class="lnk">Sair</button></form></nav></aside>
+<button class="menu-btn" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Menu">☰</button>{% endif %}
+<main class="amain">{% block content %}{% endblock %}</main><div id="toasts"></div>
+<script>window.FLASH={{ get_flashed_messages(with_categories=true)|tojson }};window.CSRF="{{csrf()}}"</script><script src="/static/js/admin.js"></script></body></html>

@@ -1,0 +1,2 @@
+{% from '_macros.html' import card %}<div id="grid-wrap"><p class="muted sm">{{products|length}} peça(s)</p>
+<div class="grid">{% for p in products %}{{card(p)}}{% else %}<div class="empty">Nenhuma peça encontrada com esses filtros.<br><a class="link" href="?">Limpar filtros</a></div>{% endfor %}</div></div>

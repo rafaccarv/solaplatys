@@ -1,0 +1,3 @@
+{% extends 'base.html' %}{% from '_macros.html' import card %}{% block title %}Categorias — {{S.store_name}}{% endblock %}
+{% block main %}<div class="wrap page"><header class="page-h"><p class="eyebrow">Explore</p><h1>Categorias</h1></header>
+{% for c in cats %}<section class="catrow"><div class="sec-h"><div><h2>{{c.name}}</h2><p class="muted">{{c.description}}</p></div><a class="link" href="/categoria/{{c.slug}}">Ver tudo →</a></div><div class="grid">{% for p in c.products %}{{card(p)}}{% else %}<p class="empty">Em breve.</p>{% endfor %}</div></section>{% else %}<p class="empty">Nenhuma categoria.</p>{% endfor %}</div>{% endblock %}

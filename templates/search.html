@@ -1,0 +1,3 @@
+{% extends 'base.html' %}{% block title %}Busca — {{S.store_name}}{% endblock %}
+{% block main %}<div class="wrap page"><header class="page-h"><p class="eyebrow">Busca</p><h1>{{ '“'~s~'”' if s else 'Pesquisar' }}</h1></header>
+{% set a={} %}{% include '_grid.html' %}</div>{% endblock %}

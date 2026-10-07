@@ -1,0 +1,13 @@
+{% macro card(p) %}
+<article class="card reveal"><a href="/produto/{{p.slug}}" class="card-img ph" aria-label="{{p.name}}">
+<img class="lazy-img" loading="lazy" width="800" height="1000" src="{{img(p.image)}}" alt="{{p.name}}">
+{% if badge(p) %}<span class="tag">{{badge(p)}}</span>{% endif %}</a>
+<div class="card-body"><h3><a href="/produto/{{p.slug}}">{{p.name}}</a></h3>
+{% if p.short_desc %}<p class="muted sm">{{p.short_desc}}</p>{% endif %}
+<p class="price">{% if p.sale_price %}<s>{{money(p.price)}}</s> <b>{{money(p.sale_price)}}</b>{% else %}{{money(p.price)}}{% endif %}</p>
+<a class="btn btn-sm" href="/produto/{{p.slug}}">Ver produto</a></div></article>
+{% endmacro %}
+{% macro catcard(c) %}
+<a class="ccard reveal ph" href="/categoria/{{c.slug}}"><img class="lazy-img" loading="lazy" width="800" height="1000" src="{{img(c.image)}}" alt="{{c.name}}"><span class="ccard-t"><b>{{c.name}}</b><small>{{c.description}}</small></span></a>
+{% endmacro %}
+{% macro secthead(s) %}{% if s.title or s.subtitle %}<div class="sec-h reveal"><div>{% if s.subtitle %}<p class="eyebrow">{{s.subtitle}}</p>{% endif %}<h2>{{s.title}}</h2></div>{% if s.button_text %}<a class="link" href="{{s.button_link or '#'}}">{{s.button_text}} →</a>{% endif %}</div>{% endif %}{% endmacro %}

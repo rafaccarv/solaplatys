@@ -1,0 +1,26 @@
+{% extends 'admin/base.html' %}{% block content %}
+<div class="row between"><h1>{{ (cfg.one ~ ': ' ~ (obj.name or obj.title or obj.email or 'novo')) if res else cfg.title }}</h1>{% if group=='appearance' %}<span class="muted sm">Prévia ao vivo abaixo — publique para aplicar.</span>{% endif %}</div>
+<form method="post" enctype="multipart/form-data" novalidate data-validate class="aform"><input type="hidden" name="_csrf" value="{{csrf()}}">
+{% if group=='appearance' %}<div class="card"><h3>Presets</h3><div class="row">{% for n,p in presets.items() %}<button type="button" class="abtn ghost" data-preset='{{p|tojson}}'>{{n}}</button>{% endfor %}</div>
+<div id="preview" class="pv"><b>Silver Empire</b><p>Joias de prata com presença.</p><span class="pvb">Ver produto</span></div></div>{% endif %}
+<div class="card">{% set ns=namespace(g='') %}
+{% for f in fields %}{% if f.grp and f.grp!=ns.g %}{% set ns.g=f.grp %}<h3>{{f.grp}}</h3>{% endif %}
+{% set v = obj[f.n] if obj[f.n] is defined and obj[f.n] is not none else '' %}
+<div class="fld {{'chk' if f.t=='check'}}" {% if f.show %}data-show="{{f.show|join(' ')}}"{% endif %}>
+{% if f.t=='check' %}<label><input type="checkbox" name="{{f.n}}" {{'checked' if v}}> {{f.l}}</label>
+{% else %}<label>{{f.l}}{% if f.req %} *{% endif %}</label>
+{% if f.t=='textarea' %}<textarea name="{{f.n}}" rows="4">{{v}}</textarea>
+{% elif f.t=='select' %}<select name="{{f.n}}" {% if f.n=='type' %}data-type-switch{% endif %}>{% for k,l in f.options %}<option value="{{k}}" {{'selected' if v|string==k|string}}>{{l}}</option>{% endfor %}</select>
+{% elif f.t=='color' %}<input type="color" name="{{f.n}}" value="{{v or '#ffffff'}}" data-var="{{f.var}}"> <label class="sm"><input type="checkbox" onchange="this.closest('.fld').querySelector('[type=color]').value='';this.checked=false"> limpar</label>
+{% elif f.t=='number' %}<input type="number" step="any" name="{{f.n}}" value="{{v}}" {% if f.var %}data-var="{{f.var}}"{% endif %}>
+{% elif f.t=='image' %}<div class="imgf"><img src="{{ img(v) if v else '' }}" alt="" {{'hidden' if not v}} height="80"><input type="file" name="{{f.n}}" accept="image/*" data-preview><input type="hidden" name="{{f.n}}_cur" value="{{v}}">{% if v %}<label class="sm"><input type="checkbox" name="{{f.n}}_remove"> remover</label>{% endif %}</div>
+{% elif f.t=='multi' %}<ul class="rows tight" data-local>{% for k,l in f.options %}<li draggable="true"><span class="grip">⋮⋮</span><label><input type="checkbox" name="{{f.n}}" value="{{k}}" {{'checked' if k in f.sel}}> {{l}}</label></li>{% endfor %}</ul>
+{% elif f.t=='password' %}<input type="password" name="{{f.n}}" autocomplete="new-password">
+{% else %}<input name="{{f.n}}" value="{{v}}" {{'required' if f.req}} {% if f.n=='email' %}type="email"{% endif %}>{% endif %}{% endif %}</div>{% endfor %}</div>
+{% if res=='products' %}<div class="card"><h3>Tags</h3><div class="fld"><input name="tags" value="{{tags or ''}}" placeholder="prata 925, feminino, anel (separadas por vírgula)"></div>
+<h3>Galeria</h3><p class="muted sm">Arraste para ordenar — a primeira é a imagem principal.</p>
+<ul class="thumbs-a" data-local id="gal">{% for i in images or [] %}<li draggable="true"><img src="{{img(i.path)}}" alt=""><input type="hidden" name="img_id" value="{{i.id}}"><label class="sm"><input type="checkbox" name="img_del" value="{{i.id}}"> excluir</label></li>{% endfor %}</ul>
+<input type="file" name="gallery" multiple accept="image/*" data-multi-preview><div id="newprev" class="thumbs-a"></div></div>{% endif %}
+<div class="row"><button class="abtn" name="stay" value="1">Salvar</button><button class="abtn ghost">Salvar e voltar</button></div></form>
+{% if cat_products %}<h2>Ordem dos produtos nesta categoria</h2><div class="card"><ul class="rows" data-sortable data-url="/admin/reorder/products">{% for p in cat_products %}<li draggable="true" data-id="{{p.id}}"><span class="grip">⋮⋮</span><img src="{{img(p.image)}}" width="40" height="40" alt=""><a class="grow" href="/admin/products/{{p.id}}">{{p.name}}</a></li>{% endfor %}</ul></div>
+<p class="muted sm">Para incluir produtos nesta categoria, edite o produto e escolha a categoria.</p>{% endif %}{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ (cat.meta_title or cat.name ~ ' — ' ~ S.store_name) if cat else title ~ ' — ' ~ S.store_name }}{% endblock %}
+{% block desc %}{{ (cat.meta_description or cat.description) if cat else S.site_description }}{% endblock %}
+{% block main %}<div class="wrap page"><header class="page-h"><p class="eyebrow">{{ 'Categoria' if cat else 'Coleção' }}</p><h1>{{title}}</h1>{% if cat and cat.description %}<p class="muted">{{cat.description}}</p>{% endif %}</header>
+<div class="shop"><button class="btn btn-sm shop-toggle" data-filters>Filtros</button>
+<form class="filters" id="filters" data-ajax>
+ <label>Ordenar<select name="sort">{% for k,l in [('default','Ordem da loja'),('featured','Destaques'),('recent','Mais recentes'),('price_asc','Menor preço'),('price_desc','Maior preço'),('name','Nome')] %}<option value="{{k}}" {{'selected' if a.sort==k}}>{{l}}</option>{% endfor %}</select></label>
+ {% if not cat %}<label>Categoria<select name="category"><option value="">Todas</option>{% for c in cats %}<option value="{{c.slug}}" {{'selected' if a.category==c.slug}}>{{c.name}}</option>{% endfor %}</select></label>{% endif %}
+ <fieldset><legend>Preço (R$)</legend><div class="row"><input type="number" name="min" min="0" placeholder="Mín" value="{{a.min}}"><input type="number" name="max" min="0" placeholder="Máx" value="{{a.max}}"></div></fieldset>
+ <label>Tag<select name="tag"><option value="">Todas</option>{% for t in tags %}<option value="{{t.slug}}" {{'selected' if a.tag==t.slug}}>{{t.name}}</option>{% endfor %}</select></label>
+ <label>Disponibilidade<select name="avail"><option value="">Todas</option><option value="disponivel" {{'selected' if a.avail=='disponivel'}}>Disponível</option><option value="sob_encomenda" {{'selected' if a.avail=='sob_encomenda'}}>Sob encomenda</option></select></label>
+ <a class="link" href="?">Limpar</a></form>
+<section id="grid-host">{% include '_grid.html' %}</section></div></div>{% endblock %}

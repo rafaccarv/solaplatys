@@ -1,0 +1,2 @@
+{% extends 'admin/base.html' %}{% block content %}<form method="post" class="login card"><h1>Silver Empire</h1><p class="muted">Acesso administrativo</p><input type="hidden" name="_csrf" value="{{csrf()}}">
+<div class="fld"><label>E-mail</label><input name="email" type="email" required autofocus></div><div class="fld"><label>Senha</label><input name="password" type="password" required></div><button class="abtn">Entrar</button></form>{% endblock %}

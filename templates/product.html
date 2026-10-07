@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% from '_macros.html' import card %}
+{% block title %}{{p.meta_title or p.name ~ ' — ' ~ S.store_name}}{% endblock %}{% block desc %}{{p.meta_description or p.short_desc}}{% endblock %}
+{% block ogimg %}{{ img(p.og_image or p.image) }}{% endblock %}
+{% block main %}<div class="wrap page"><nav class="crumbs sm"><a href="/">Início</a> / {% if p.cat_slug %}<a href="/categoria/{{p.cat_slug}}">{{p.cat_name}}</a> / {% endif %}{{p.name}}</nav>
+<div class="pdp"><div class="pdp-g" data-gallery><div class="pdp-main ph"><img id="main-img" src="{{img(images[0].path if images else p.image)}}" alt="{{p.name}}" width="800" height="1000"></div>
+{% if images|length>1 %}<div class="thumbs">{% for i in images %}<button class="ph {{'on' if loop.first}}" data-src="{{img(i.path)}}" aria-label="Imagem {{loop.index}}"><img loading="lazy" src="{{img(i.path)}}" alt=""></button>{% endfor %}</div>{% endif %}</div>
+<div class="pdp-i"><p class="eyebrow">{{p.cat_name}}</p><h1>{{p.name}}</h1>{% if badge(p) %}<span class="tag tag-i">{{badge(p)}}</span>{% endif %}
+<p class="price big">{% if p.sale_price %}<s>{{money(p.price)}}</s> <b>{{money(p.sale_price)}}</b>{% else %}{{money(p.price)}}{% endif %}</p>
+<p>{{p.short_desc}}</p>
+<a class="btn btn-block" id="interest" href="{{ S.interest_url.replace('{name}',p.name|urlencode).replace('{sku}',p.sku|urlencode) }}" target="_blank" rel="noopener">{{S.interest_label}}</a>
+<dl class="specs"><div><dt>Código</dt><dd>{{p.sku or '—'}}</dd></div><div><dt>Material</dt><dd>{{p.material or '—'}}</dd></div><div><dt>Peso</dt><dd>{{p.weight or '—'}}</dd></div><div><dt>Tamanho</dt><dd>{{p.size or '—'}}</dd></div>
+<div><dt>Disponibilidade</dt><dd>{{ {'disponivel':'Disponível','sob_encomenda':'Sob encomenda','indisponivel':'Indisponível'}.get(p.availability) }}</dd></div>{% if p.subcategory %}<div><dt>Subcategoria</dt><dd>{{p.subcategory}}</dd></div>{% endif %}
+{% for k,v in extra_lines(p.extra) %}<div><dt>{{k}}</dt><dd>{{v}}</dd></div>{% endfor %}</dl>
+{% if p.description %}<h3>Descrição</h3><p class="pre">{{p.description}}</p>{% endif %}{% if p.custom_text %}<p class="note pre">{{p.custom_text}}</p>{% endif %}
+{% if tags %}<p class="tags">{% for t in tags %}<a href="/produtos?tag={{t.slug}}">#{{t.name}}</a>{% endfor %}</p>{% endif %}</div></div>
+{% if related %}<section class="catrow"><div class="sec-h"><h2>Você também pode gostar</h2></div><div class="grid">{% for r in related %}{{card(r)}}{% endfor %}</div></section>{% endif %}</div>{% endblock %}

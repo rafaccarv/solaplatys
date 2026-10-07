@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% from '_macros.html' import card, catcard, secthead %}
+{% block main %}
+{% for s in blocks %}{% set st='background:'+s.bg_color+';' if s.bg_color %}{% set st=st~('color:'+s.text_color+';' if s.text_color) %}
+{% if s.type=='hero' %}<section class="hero" style="{{st}}"><img src="{{img(s.image)}}" alt="" fetchpriority="high"><div class="wrap hero-in"><p class="eyebrow">{{S.store_name}}</p><h1>{{s.title}}</h1><p>{{s.subtitle}}</p>{% if s.button_text %}<a class="btn btn-light" href="{{s.button_link or '#'}}">{{s.button_text}}</a>{% endif %}</div></section>
+{% elif s.type=='banner' %}<section class="sec" style="{{st}}"><div class="wrap">{{secthead(s)}}<div class="carousel" data-carousel>{% for b in s['items'] %}<a class="slide ph" href="{{b.link or '#'}}"><img class="lazy-img" loading="lazy" src="{{img(b.image)}}" alt="{{b.title}}"><span class="slide-t"><b>{{b.title}}</b><small>{{b.subtitle}}</small></span></a>{% else %}<p class="empty">Adicione banners na zona “{{s.zone}}”.</p>{% endfor %}</div></div></section>
+{% elif s.type=='categories' %}<section class="sec" style="{{st}}"><div class="wrap">{{secthead(s)}}<div class="grid grid-c">{% for c in s['items'] %}{{catcard(c)}}{% endfor %}</div></div></section>
+{% elif s.type in ('featured','new','collection') %}<section class="sec" style="{{st}}"><div class="wrap">{{secthead(s)}}<div class="grid">{% for p in s['items'] %}{{card(p)}}{% else %}<p class="empty">Nenhum produto para exibir.</p>{% endfor %}</div></div></section>
+{% elif s.type=='promo' %}<section class="sec" style="{{st}}"><div class="wrap promo"><div class="promo-img ph"><img class="lazy-img" loading="lazy" src="{{img(s.image)}}" alt=""></div><div class="promo-t reveal"><p class="eyebrow">{{s.subtitle}}</p><h2>{{s.title}}</h2>{% if s.button_text %}<a class="btn" href="{{s.button_link or '#'}}">{{s.button_text}}</a>{% endif %}</div></div></section>
+{% elif s.type=='text' %}<section class="sec sec-text" style="{{st}}"><div class="wrap narrow reveal"><p class="eyebrow">{{s.subtitle}}</p><h2>{{s.title}}</h2><p>{{s.body}}</p></div></section>
+{% elif s.type=='gallery' %}<section class="sec" style="{{st}}"><div class="wrap">{{secthead(s)}}<div class="gal">{% for b in s['items'] %}<a class="ph reveal" href="{{b.link or '#'}}"><img class="lazy-img" loading="lazy" src="{{img(b.image)}}" alt="{{b.title}}"></a>{% endfor %}</div></div></section>{% endif %}
+{% else %}<section class="sec"><div class="wrap empty">Monte sua página inicial em /admin → Página inicial.</div></section>{% endfor %}
+{% endblock %}

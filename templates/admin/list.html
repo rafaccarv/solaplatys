@@ -1,0 +1,9 @@
+{% extends 'admin/base.html' %}{% block content %}<div class="row between"><h1>{{cfg.title}}</h1><a class="abtn" href="/admin/{{res}}/new">+ Novo</a></div>
+{% if cfg.sortable %}<p class="muted sm">Arraste as linhas para reordenar.</p>{% endif %}
+<div class="card"><ul class="rows" {% if cfg.sortable %}data-sortable data-url="/admin/reorder/{{res}}"{% endif %}>
+{% for r in rows %}<li data-id="{{r.id}}" {% if cfg.sortable %}draggable="true"{% endif %}>{% if cfg.sortable %}<span class="grip">⋮⋮</span>{% endif %}
+{% if r.image is defined %}<img src="{{ img(r.image) }}" width="40" height="40" alt="">{% endif %}
+<a class="grow" href="/admin/{{res}}/{{r.id}}">{% for c in cfg.cols %}<span class="{{'muted' if not loop.first}}">{{ money(r[c]) if c=='price' else r[c] }}</span> {% endfor %}</a>
+{% for f in ['visible','active'] if r[f] is defined %}<label class="sw"><input type="checkbox" {{'checked' if r[f]}} data-toggle="/admin/toggle/{{res}}/{{r.id}}/{{f}}"><i></i></label>{% endfor %}
+<form method="post" action="/admin/{{res}}/{{r.id}}/delete" data-confirm="Excluir “{{r[cfg.cols[0]]}}”?"><input type="hidden" name="_csrf" value="{{csrf()}}"><button class="lnk danger">Excluir</button></form></li>
+{% else %}<li class="empty">Nada por aqui ainda.</li>{% endfor %}</ul></div>{% endblock %}

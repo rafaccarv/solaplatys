@@ -1,0 +1,4 @@
+{% extends 'admin/base.html' %}{% block content %}<h1>Dashboard</h1>
+<div class="stats">{% for l,v in [('Produtos',stats.products),('Categorias',stats.categories),('Produtos ativos',stats.active),('Em destaque',stats.featured)] %}<div class="card stat"><b>{{v}}</b><span>{{l}}</span></div>{% endfor %}</div>
+<div class="row"><a class="abtn" href="/admin/products/new">+ Novo produto</a><a class="abtn ghost" href="/admin/categories/new">+ Nova categoria</a><a class="abtn ghost" href="/admin/home_sections/new">+ Nova seção</a></div>
+<h2>Últimas alterações</h2><div class="card"><table>{% for r in recent %}<tr><td>{{ 'Produto' if r.res=='products' else 'Categoria' }}</td><td><a href="/admin/{{r.res}}/{{r.id}}">{{r.name}}</a></td><td class="muted">{{r.updated_at}}</td></tr>{% endfor %}</table></div>{% endblock %}
